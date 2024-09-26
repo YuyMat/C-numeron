@@ -8,43 +8,55 @@
 void inputNum(char *player_num);
 bool ruleNum(char *num);
 int generateRandomNum(int mode, int min, int Max, char *computer_num);
-void guessNum(int mode, int round, char *who_guess, int *num_array);
-void judgeEatBite(int mode, char *from_num, char *to_num, int *EAT, int round, int *num_array);
+void guessNum(int mode, char *who_guess);
+void judgeEatBite(int mode, char *from_num, char *to_num, int *EAT);
 bool isWin(int eat);
-void saveNumArray(int round, int *num_array, char *num, int eat, int bite);
-void computerGuessNum(int *num_array, char *computer_guess_num);
+void saveNumArray(char *num, int eat, int bite);
+void computerGuessNum(char *computer_guess_num);
+bool check_history(int target);
 
 struct number{
     char num[4];
     char guess_num[4];
 };
 
+//  0-9までの値を保持する配列 for computer
 char str_num_array[11] = "0123456789";
+int num_array[10] = {0};
+
+// guess_numの履歴
+int guess_history[100];
+
+int round_count = 1;
 
 int main(void) {
     struct number player;
     struct number computer;
 
     int eat; //勝利確認用
-    int round = 1;
 
-    //  0-9までの値を保持する配列 for computer
-    int num_array[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    // round 1,2,3は固定のため初期化
+    guess_history[1] = 123;
+    guess_history[2] = 456;
+    guess_history[3] = 789;
+
+    // ランダムシード初期化
+    srand((unsigned int)time(NULL));
 
     // playerの数字決定
+    puts("----------------------------------------------------");
     inputNum(player.num);
     puts("----------------------------------------------------");
 
     // computerの数字決定
     generateRandomNum(1, 123, 987, computer.num);
     printf("コンピュータの数字が決まりました\n");
-    printf("%s\n", computer.num);
     puts("----------------------------------------------------");
 
     while (true) {
         // player　予想
-        guessNum(0, round, player.guess_num, NULL);
-        judgeEatBite(0, player.guess_num, computer.num, &eat, round, NULL);
+        guessNum(0, player.guess_num);
+        judgeEatBite(0, player.guess_num, computer.num, &eat);
         
         if (isWin(eat)) {
             printf("Player Win!!\n");
@@ -53,20 +65,15 @@ int main(void) {
         puts("----------------------------------------------------");
 
         // computer 予想
-        guessNum(1, round, computer.guess_num, num_array);
-        judgeEatBite(1, computer.guess_num, player.num, &eat, round, num_array);
+        guessNum(1, computer.guess_num);
+        judgeEatBite(1, computer.guess_num, player.num, &eat);
         if (isWin(eat)) {
             printf("Player Lose;;\n");
             exit(0);
         }
         puts("----------------------------------------------------");
 
-        // debug
-        for (int i = 0; i < 10; i++) {
-            printf("%d", num_array[i]);
-        }
-
-        round ++;
+        round_count ++;
     }
 
     return 0;
@@ -89,6 +96,7 @@ void inputNum(char *player_num) {
     }
 }
 
+// in rule == true, not in rule == false
 bool ruleNum(char *num) {
     int counter = 0;
 
@@ -129,16 +137,15 @@ int generateRandomNum(int mode, int min, int Max, char *computer_num) {
     int int_num;
     char str_num[4];
 
-    // ランダムシード初期化
-    srand((unsigned int)time(NULL));
-
     // 適正数字になるまで3桁のランダムな数字を作成
     while(loop) {
         // 3桁作成
         int_num = min + rand() % (Max - min + 1);
-        // int to str
-        sprintf(str_num, "%d", int_num);
-        if (ruleNum(str_num)) {loop = false;}
+        if (mode == 1) {
+            sprintf(str_num, "%d", int_num);
+            if (ruleNum(str_num)) {loop = false;}
+        }
+        else {loop = false;}
     }
 
     if (mode == 1) {
@@ -149,7 +156,7 @@ int generateRandomNum(int mode, int min, int Max, char *computer_num) {
     }
 }
 
-void guessNum(int mode, int round, char *who_guess, int *num_array) {
+void guessNum(int mode, char *who_guess) {
     // mode 0 = player guess
     // mode 1 = computer guess
     
@@ -171,21 +178,19 @@ void guessNum(int mode, int round, char *who_guess, int *num_array) {
     } else if (mode == 1) {
         printf("コンピュータの予想の番です\n");
 
-        if (round == 1) {
+        if (round_count == 1) {
             sprintf(who_guess, "123");
-        } else if (round == 2) {
+        } else if (round_count == 2) {
             sprintf(who_guess, "456");
-        } else if (round == 3) {
+        } else if (round_count == 3) {
             sprintf(who_guess, "789");
         } else {
-            computerGuessNum(num_array, who_guess);
+            computerGuessNum(who_guess);
         }
-        
     }
-    
 }
 
-void judgeEatBite(int mode, char *from_num, char *to_num, int *EAT, int round, int *num_array) {
+void judgeEatBite(int mode, char *from_num, char *to_num, int *EAT) {
     int eat = 0, bite = 0;
 
     for (int i = 0; i < 3; i++) {
@@ -201,17 +206,24 @@ void judgeEatBite(int mode, char *from_num, char *to_num, int *EAT, int round, i
     }
     
     // computerの場合、num_arrayの処理
-    if (mode == 1 && num_array != NULL) {saveNumArray(round, num_array, from_num, eat, bite);}
+    if (mode == 1) {saveNumArray(from_num, eat, bite);}
 
     *EAT = eat;
     printf("%s ： %deat %dbite\n", from_num, eat, bite);
 }
 
-void saveNumArray(int round, int *num_array, char *num, int eat, int bite) {
+void saveNumArray(char *num, int eat, int bite) {
     int tmp_sum = 0;
 
     // 可能性がある数字をtrueにする
-    if (eat + bite > 0) {
+    if ((eat + bite > 0) && (eat + bite < 3)) {
+        for (int i = 0; i < 3; i++) {
+            int int_a_num = num[i] - '0';
+            num_array[int_a_num] = 1;
+        }
+    } else if (eat + bite == 3) { //数字が確定したら他の数を0にする
+        memset(num_array, 0, sizeof(num_array)); //num_array リセット
+        
         for (int i = 0; i < 3; i++) {
             int int_a_num = num[i] - '0';
             num_array[int_a_num] = 1;
@@ -224,7 +236,7 @@ void saveNumArray(int round, int *num_array, char *num, int eat, int bite) {
     }
 
     // ラウンド3の時に可能性のある数字の個数が9個なかったら0をtrueにする
-    if (round == 3) {
+    if (round_count == 3) {
         // 可能性のある数字の個数を調べる
         for (int i = 1; i < 10; i++) {
             tmp_sum += num_array[i];
@@ -240,37 +252,49 @@ bool isWin(int eat) {
     return false;
 }
 
+// is existed == false,  is not existed == true
+bool check_history(int target) {
+    for (int i = 1; i <= round_count; i++) {
+        if (target == guess_history[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 // round >= 4の時のコンピュータ予想番号
-void computerGuessNum(int *num_array, char *computer_guess_num) {
+void computerGuessNum(char *computer_guess_num) {
     
-    int int_tmp_num;
+    int int_tmp_num = 0;
     int random_num1;
     int random_num2;
     int random_num3;
-    char str_tmp_num[10];
+    char str_tmp_num[11];
     int array_count = 0;
     char return_tmp_num[4];
 
-    for (int i = 0; i < 10; i++) {
+    // 可能性のある数字達を一つの文字列に
+    for (int i = 9; i >= 0; i--) {
         if (num_array[i]) {
             int_tmp_num *= 10;
-            int_tmp_num += atoi(&str_num_array[i]);
+            int_tmp_num += i;
             array_count++;
         }
     }
-
-    
     sprintf(str_tmp_num, "%d", int_tmp_num);
-    int len_num_array = strlen(str_tmp_num);
 
-    for (int i = 0; i < 3; i++) {
-        random_num1 = generateRandomNum(0, 0, len_num_array, NULL);
-        random_num2 = generateRandomNum(0, 0, len_num_array, NULL);
-        random_num3 = generateRandomNum(0, 0, len_num_array, NULL);
+    // 3桁の数字作成
+    bool flag = true;
+    while (flag) {
+        random_num1 = generateRandomNum(0, 0, array_count - 1, NULL);
+        random_num2 = generateRandomNum(0, 0, array_count - 1, NULL);
+        random_num3 = generateRandomNum(0, 0, array_count - 1, NULL);
+    
+        sprintf(return_tmp_num, "%c%c%c", str_tmp_num[random_num1], str_tmp_num[random_num2], str_tmp_num[random_num3]);
+        
+        // 前に試したことがない数字 && ルール通りの数字
+        if (check_history(atoi(return_tmp_num)) && ruleNum(return_tmp_num)) {flag = false;}
     }
-
-    sprintf(return_tmp_num, "%c%c%c", str_tmp_num[random_num1], str_tmp_num[random_num2], str_tmp_num[random_num3]);
-    ruleNum(return_tmp_num);
-
     strcpy(computer_guess_num, return_tmp_num);
+    guess_history[round_count] = atoi(computer_guess_num);
 }
