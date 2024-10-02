@@ -52,7 +52,8 @@ int main(void) {
 
     // playerの数字決定
     puts("----------------------------------------------------");
-    inputNum(player.num);
+    // inputNum(player.num);
+    sprintf(player.num, "%s", "258");
     puts("----------------------------------------------------");
 
     // computerの数字決定
@@ -62,13 +63,13 @@ int main(void) {
 
     while (true) {
         // player　予想
-        guessNum(0, player.guess_num);
-        judgeEatBite(0, player.guess_num, computer.num, &eat);
+        // guessNum(0, player.guess_num);
+        // judgeEatBite(0, player.guess_num, computer.num, &eat);
         
-        if (isWin(eat)) {
-            printf("Player Win!!\n");
-            exit(0);
-        }
+        // if (isWin(eat)) {
+        //     printf("Player Win!!\n");
+        //     exit(0);
+        // }
         puts("----------------------------------------------------");
 
         // computer 予想
@@ -82,7 +83,7 @@ int main(void) {
 
         // debug
         printf("-----debug-----\n");
-        printf("round :  %d\n", round_count);
+        printf("round :  %d\n", round_count + 1);
 
         printf("num_array : ");
         for (int i = 0; i < 10; i++) {
@@ -278,7 +279,7 @@ void saveNumArray(char *num, int eat, int bite) {
     }
 
     if (S_array_len) {
-        for (int i = 0; i <= S_array_len; i++) {
+        for (int i = 0; i <= S_array_len - 1; i++) {
             memset(same_num, 'x', sizeof(same_num));
             memset(S_different_num, 'x', sizeof(S_different_num));
             memset(guess_different_num, 'x', sizeof(guess_different_num));
@@ -300,7 +301,7 @@ void saveNumArray(char *num, int eat, int bite) {
                     absolutely_array[(S_different_num[0] - '0')] = 1;
                     absolutely_array_count++;
                 }
-                if (guess_different_num[0] - '0') {num_array[(guess_different_num[0] - '0')] = 0;}
+                if (absolutely_array[guess_different_num[0] - '0']) {num_array[(guess_different_num[0] - '0')] = 0;}
                 break;
             }
         }
@@ -347,8 +348,7 @@ int sameNumberCount(char *num, int S_array, char *S_different_num, char *guess_d
     index = 0;
     for (int i = 0; i < 3; i++) {
         if (strchr(same_num, num[i]) == NULL) {
-            guess_different_num[index] = num[i];
-            index++;
+            guess_different_num[index++] = num[i];
         }
     }
 
@@ -359,7 +359,7 @@ int sameNumberCount(char *num, int S_array, char *S_different_num, char *guess_d
             index++;
         }
     }
-    
+
     return same_number_counter;
 }
 
@@ -387,7 +387,7 @@ void computerGuessNum(char *computer_guess_num) {
     char str_tmp_num[11];
 
     int int_absolutely_array_num = 0;
-    char str_tmp_absolutely_num[11];
+    char str_tmp_absolutely_num[4];
 
     int random_num1;
     int random_num2;
@@ -422,7 +422,7 @@ void computerGuessNum(char *computer_guess_num) {
 
         bool f = true;
             while (f) {
-                random_num1 = generateRandomNum(0, 0, absolutely_array_count - 1, NULL);
+                random_num1 = generateRandomNum(0, 0, array_count - 1, NULL);
                 sprintf(return_tmp_num, "%s%c", str_tmp_absolutely_num, str_tmp_num[random_num1]);
                 if (check_history(atoi(return_tmp_num)) && ruleNum(return_tmp_num)) {f = false;}
             }
