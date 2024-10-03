@@ -52,8 +52,7 @@ int main(void) {
 
     // playerの数字決定
     puts("----------------------------------------------------");
-    // inputNum(player.num);
-    sprintf(player.num, "%s", "258");
+    inputNum(player.num);
     puts("----------------------------------------------------");
 
     // computerの数字決定
@@ -63,13 +62,13 @@ int main(void) {
 
     while (true) {
         // player　予想
-        // guessNum(0, player.guess_num);
-        // judgeEatBite(0, player.guess_num, computer.num, &eat);
+        guessNum(0, player.guess_num);
+        judgeEatBite(0, player.guess_num, computer.num, &eat);
         
-        // if (isWin(eat)) {
-        //     printf("Player Win!!\n");
-        //     exit(0);
-        // }
+        if (isWin(eat)) {
+            printf("Player Win!!\n");
+            exit(0);
+        }
         puts("----------------------------------------------------");
 
         // computer 予想
@@ -80,30 +79,6 @@ int main(void) {
             exit(0);
         }
         puts("----------------------------------------------------");
-
-        // debug
-        printf("-----debug-----\n");
-        printf("round :  %d\n", round_count + 1);
-
-        printf("num_array : ");
-        for (int i = 0; i < 10; i++) {
-            printf(" %d", num_array[i]);
-        }
-        putchar('\n');
-        printf("S_array : ");
-        for (int i = 0; i < 10; i++) {
-            printf(" %d", S_array[i]);
-        }
-        putchar('\n');
-        printf("absolutely : ");
-        for (int i = 0; i < 10; i++) {
-            printf(" %d", absolutely_array[i]);
-        }
-        putchar('\n');
-        printf("absolutely_len: ");
-        printf(" %d", absolutely_array_count);
-        putchar('\n');
-        printf("-----debug-----\n");
 
         round_count ++;
     }
